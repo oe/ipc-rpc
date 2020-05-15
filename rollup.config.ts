@@ -13,7 +13,7 @@ export default [
  * ipc-rpc v${pkg.version}
  * Copyright© ${new Date().getFullYear()} Saiya ${pkg.homepage}
  */`,
-      format: 'es',
+      format: 'cjs',
       file: `dist/main.js`
     },
     plugins: [
@@ -34,7 +34,7 @@ export default [
  * Composie v${pkg.version}
  * Copyright© ${new Date().getFullYear()} Saiya ${pkg.homepage}
  */`,
-      format: 'es',
+      format: 'cjs',
       file: `dist/renderer.js`
     },
     plugins: [

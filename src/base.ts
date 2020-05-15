@@ -3,7 +3,7 @@ import electron, { IpcMain, IpcRenderer, WebContents } from 'electron'
 type IPC = IpcMain | IpcRenderer
 
 /**
- * default channeal name for messaging between main & render
+ * default channel name for messaging between main & render
  */
 export const CHANNEL_HUB_NAME = 'messagehub'
 
@@ -69,6 +69,7 @@ export default class MessageHub {
     // progress message id
     const msgprgid = `${msgid}-progress`
     if (onprogress) {
+      // @ts-ignore
       this.ipc.on(msgprgid, (evt, resp) => {
         // call progress callback if progress message received
         onprogress(resp)
@@ -78,8 +79,10 @@ export default class MessageHub {
     // return a promsise to get the response
     return new Promise(resolve => {
       // listen to the response
+      // @ts-ignore
       this.ipc.once(msgid, (event, resp) => {
         // remove listener for the progress message
+        // @ts-ignore
         this.ipc.removeAllListeners(msgprgid)
         resolve(resp)
       })
@@ -120,6 +123,7 @@ export default class MessageHub {
    * @param cb message callback
    */
   on (channel: string, cb: Function) {
+    // @ts-ignore
     this.ipc.on(channel, this._listenTo(channel, cb))
   }
   /**
@@ -133,6 +137,7 @@ export default class MessageHub {
       cb._realListener && this.ipc.removeListener(channel, cb._realListener)
       return
     }
+    // @ts-ignore
     this.ipc.removeAllListeners(channel)
   }
 }

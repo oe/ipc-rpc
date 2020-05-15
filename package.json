@@ -1,6 +1,6 @@
 {
   "name": "ipc-rpc",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "ipc communication as rpc(remote procedure call) for  electron apps",
   "files": [
     "dist"

@@ -12,16 +12,17 @@ class Message extends Base {
   }
 
   /**
-   * set a function to get the renderer window's webcontents by a string
+   * set a function to get the renderer window's webContents by a string
    * @param fn
    */
   setGetWinWebContents (fn: getWindowWebContents) {
     this.getWindowWebContents = fn
   }
 
-  private getWinContents (winName: string | WebContents) {
-    if (typeof winName === 'object') return winName
-    if (typeof winName === 'string' && this.getWindowWebContents) {
+  private getWinContents (winName: string | WebContents): WebContents {
+    if (winName instanceof WebContents) return winName
+    // @ts-ignore
+    if (this.getWindowWebContents) {
       return this.getWindowWebContents(winName)
     }
     throw new Error('cannot find window ' + winName)
