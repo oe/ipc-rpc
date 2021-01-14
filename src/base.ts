@@ -5,10 +5,11 @@ type IPC = IpcMain | IpcRenderer
 /**
  * default channel name for messaging between main & render
  */
-export const CHANNEL_HUB_NAME = 'messagehub'
+export const DEFAULT_CHANNEL_NAME = '__wonderful_xiu__'
 
 type ErrorHandler = (e: Error) => any
 
+export type IHandlerMap = Record<string, Function>
 export default class MessageHub {
   private isMainProcess: boolean
   private msgID: number
@@ -37,17 +38,10 @@ export default class MessageHub {
     channel: string,
     ...args: any[]
   ) {
-    // last arguments means whether this request need response, true by default
-    const needRes: boolean =
-      typeof args[args.length - 1] === 'boolean' ? args.pop() : true
-    // the first argument means method
-    // const method = args[0]
-
     // the second is the options, and should has onprogress callback if it need progress info
-    const options = args[1]
+    const options = args[0]
     // get the onprogress callback
     const onprogress =
-      needRes &&
       options &&
       typeof options.onprogress === 'function' &&
       options.onprogress
@@ -55,36 +49,30 @@ export default class MessageHub {
     // assemble the request structure
     const reqData = {
       // message id, false for one way message(no need response)
-      id: needRes ? ++this.msgID : false,
+      id: ++this.msgID,
       args,
       progress: !!onprogress
     }
 
     ipc.send(channel, reqData)
-    // return if no need reponse
-    if (!needRes) return
 
     // response message id
-    const msgid = `${channel}-${reqData.id}`
+    const msgID = `${channel}-${reqData.id}`
     // progress message id
-    const msgprgid = `${msgid}-progress`
+    const msgProgressID = `${msgID}-progress`
     if (onprogress) {
-      // @ts-ignore
-      this.ipc.on(msgprgid, (evt, resp) => {
-        // call progress callback if progress message received
+      this.ipc.on(msgProgressID, (evt, resp) => {
         onprogress(resp)
       })
     }
 
-    // return a promsise to get the response
-    return new Promise(resolve => {
+    // return a promise to get the response
+    return new Promise((resolve, reject) => {
       // listen to the response
-      // @ts-ignore
-      this.ipc.once(msgid, (event, resp) => {
+      this.ipc.once(msgID, (event, resp) => {
         // remove listener for the progress message
-        // @ts-ignore
-        this.ipc.removeAllListeners(msgprgid)
-        resolve(resp)
+        this.ipc.removeAllListeners(msgProgressID)
+        resp.isSuccess ? resolve(resp.data) : reject(resp.data)
       })
     })
   }
@@ -94,50 +82,57 @@ export default class MessageHub {
    * @param channel channel name
    * @param cb message callback
    */
-  private _listenTo (channel: string, cb: Function) {
-    const realListener = async (evt, { id, args, progress }) => {
+  private _listenTo (channel: string, handlerMap: IHandlerMap) {
+    const realListener = async (evt: electron.IpcRendererEvent | electron.IpcMainEvent, { id, args, progress }: { id: string, args: any[], progress: boolean }) => {
       let resp: any
-      if (id && progress && args[1]) {
+      const [methodName, ...restArgs] = args
+      if (id && progress && restArgs[0]) {
         // reassign the onprogress
-        args[1].onprogress = function (data) {
+        restArgs[0].onprogress = function (data) {
           evt.sender.send(`${channel}-${id}-progress`, data)
         }
       }
+      // append raw event as the last argument
+      restArgs.push(evt)
+      let isSuccess = true
       // catch the callback error
       try {
-        resp = await cb.apply(null, args)
+        const cb = handlerMap[methodName]
+        // @ts-nocheck
+        if (typeof cb !== 'function') throw new Error(`[IPC-RPC] method ${methodName} not a function in channel ${channel}`)
+        resp = await cb.apply(null, restArgs)
       } catch (e) {
         // hander the error by errorHandler or just return the error
         resp = this.errorHandler ? this.errorHandler(e) : e
+        isSuccess = false
       }
-      id && evt.sender.send(`${channel}-${id}`, resp)
+      id && evt.sender.send(`${channel}-${id}`, { data: resp, isSuccess })
     }
     // save the real message callback  for `off` using
-    // @ts-ignore
-    cb._realListener = realListener
     return realListener
   }
+
   /**
-   * listener to a message
-   * @param channel channel name
-   * @param cb message callback
+   * listen default message channel
+   * @param handlerMap 
    */
-  on (channel: string, cb: Function) {
-    // @ts-ignore
-    this.ipc.on(channel, this._listenTo(channel, cb))
+  onMsg(handlerMap: IHandlerMap) {
+    this.on(DEFAULT_CHANNEL_NAME, handlerMap)
+  }
+  /** 
+   * listen to a message
+   * @param channel channel name
+   * @param handlerMap handler map
+   */
+  on (channel: string, handlerMap: IHandlerMap) {
+    this.ipc.on(channel, this._listenTo(channel, handlerMap))
   }
   /**
    * remove channel's callback
    * @param channel channel name
    * @param cb message callback, leave empty to remove all channel callback
    */
-  off (channel: string, cb?: Function) {
-    if (cb) {
-      // @ts-ignore
-      cb._realListener && this.ipc.removeListener(channel, cb._realListener)
-      return
-    }
-    // @ts-ignore
+  off (channel: string) {
     this.ipc.removeAllListeners(channel)
   }
 }

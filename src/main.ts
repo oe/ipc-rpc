@@ -1,8 +1,8 @@
 import { WebContents } from 'electron'
 import Base from './base'
-export { CHANNEL_HUB_NAME } from './base'
+export { DEFAULT_CHANNEL_NAME } from './base'
 
-type getWindowWebContents = (name: string) => WebContents
+type getWindowWebContents = (winName: string) => WebContents
 
 class Message extends Base {
   private getWindowWebContents?: getWindowWebContents
@@ -21,15 +21,14 @@ class Message extends Base {
 
   private getWinContents (winName: string | WebContents): WebContents {
     if (winName instanceof WebContents) return winName
-    // @ts-ignore
     if (this.getWindowWebContents) {
       return this.getWindowWebContents(winName)
     }
-    throw new Error('cannot find window ' + winName)
+    throw new Error('[IPC-RPC]cannot find window ' + winName)
   }
   /**
    *
-   * @param winName window name or a webcontents object
+   * @param winName window name or a webContents object
    * @param channel channel name
    * @param args
    */

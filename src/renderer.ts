@@ -1,5 +1,7 @@
 import { IpcRenderer } from 'electron'
-import Base, { CHANNEL_HUB_NAME } from './base'
+import Base, { DEFAULT_CHANNEL_NAME } from './base'
+
+export { DEFAULT_CHANNEL_NAME }
 
 class Message extends Base {
   /**
@@ -8,16 +10,16 @@ class Message extends Base {
    * @param args
    */
   send (channel, ...args) {
-    this._send(this.ipc as IpcRenderer, channel, ...args)
+    return this._send(this.ipc as IpcRenderer, channel, ...args)
   }
 
   /**
    * default message method to send message to main process, no need to set the channel name
-   * @param method method name to call
+   * @param methodName method name to call
    * @param args arguments for the method
    */
-  sendMsg (method: string, ...args: any[]) {
-    this._send(this.ipc as IpcRenderer, CHANNEL_HUB_NAME, method, ...args)
+  sendMsg (methodName: string, ...args: any[]) {
+    return this._send(this.ipc as IpcRenderer, DEFAULT_CHANNEL_NAME, methodName, ...args)
   }
 }
 
