@@ -39,7 +39,7 @@ export default class MessageHub {
     ...args: any[]
   ) {
     // the second is the options, and should has onprogress callback if it need progress info
-    const options = args[0]
+    const options = args[1]
     // get the onprogress callback
     const onprogress =
       options &&
