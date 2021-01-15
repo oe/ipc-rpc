@@ -1,6 +1,6 @@
 {
   "name": "ipc-rpc",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "ipc communication as rpc(remote procedure call) for  electron apps",
   "files": [
     "dist"
@@ -42,8 +42,9 @@
     "@babel/runtime-corejs2": "^7.1.2",
     "@types/jest": "^23.3.1",
     "@types/node": "^10.5.5",
+    "electron": "^11.2.0",
     "jest": "22.1.4",
-    "parcel-bundler": "^1.10.2",
+    "parcel-bundler": "^1.12.4",
     "rimraf": "2.6.2",
     "rollup": "0.55.3",
     "rollup-plugin-typescript2": "^0.16.1",

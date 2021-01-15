@@ -31,7 +31,7 @@ export default class MessageHub {
    * inner send method
    * @param ipc object to send message
    * @param channel channel name
-   * @param args rest argruments, we assume args[0] is function name be called in the other side
+   * @param args rest arguments, we assume args[0] is function name be called in the other side
    */
   protected _send (
     ipc: IpcRenderer | WebContents,
@@ -61,6 +61,7 @@ export default class MessageHub {
     // progress message id
     const msgProgressID = `${msgID}-progress`
     if (onprogress) {
+      // @ts-ignore
       this.ipc.on(msgProgressID, (evt, resp) => {
         onprogress(resp)
       })
@@ -98,11 +99,11 @@ export default class MessageHub {
       // catch the callback error
       try {
         const cb = handlerMap[methodName]
-        // @ts-nocheck
+        // tslint:disable-next-line
         if (typeof cb !== 'function') throw new Error(`[IPC-RPC] method ${methodName} not a function in channel ${channel}`)
         resp = await cb.apply(null, restArgs)
       } catch (e) {
-        // hander the error by errorHandler or just return the error
+        // handle the error by errorHandler or just return the error
         resp = this.errorHandler ? this.errorHandler(e) : e
         isSuccess = false
       }
@@ -116,7 +117,7 @@ export default class MessageHub {
    * listen default message channel
    * @param handlerMap 
    */
-  onMsg(handlerMap: IHandlerMap) {
+  onMsg (handlerMap: IHandlerMap) {
     this.on(DEFAULT_CHANNEL_NAME, handlerMap)
   }
   /** 

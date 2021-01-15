@@ -18,6 +18,7 @@ export default [
     },
     plugins: [
       typescript({
+        abortOnError: false,
         tsconfigOverride: {
           compilerOptions: { module: 'esnext' }
         },
@@ -39,6 +40,7 @@ export default [
     },
     plugins: [
       typescript({
+        abortOnError: false,
         tsconfigOverride: {
           compilerOptions: { module: 'esnext' }
         },
