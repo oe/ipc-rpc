@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+
+  <title>Hash</title>
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="./styles.css">
+
+</head>
+
+<body>
+  <div id="container" class="container-fluid">
+    <h1 id="title">IPC-RPC demo</h1>
+    <!-- Input row -->
+    <div class="row">
+      <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 ">
+        <h3 class="hash-heading">Input a message bellow</h3>
+        <textarea rows="2" id="text-input" class="form-control text-input" placeholder="Enter text and see it hashed..."></textarea>
+      </div>
+    </div>
+
+    <!-- MD5 row -->
+    <div class="row">
+      <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+        <h3 class="hash-heading">MD5</h3>
+        <pre id="md5-output" class="hash-output"> </pre>
+      </div>
+    </div>
+
+    <!-- SHA-1 row -->
+    <div class="row">
+      <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+        <h3 class="hash-heading">SHA-1 (test error)</h3>
+        <pre id="sha1-output" class="hash-output"> </pre>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+        <h3 class="hash-heading">Progress test</h3>
+        <button id="progress-btn">test progress</button>
+        <pre id="progress-output" class="hash-output"> </pre>
+      </div>
+    </div>
+
+  </div>
+  <script src="./window.js" charset="utf-8"></script>
+</body>
+
+</html>

@@ -1,8 +1,5 @@
 import { IpcRenderer } from 'electron'
-import Base, { DEFAULT_CHANNEL_NAME } from './base'
-
-export { DEFAULT_CHANNEL_NAME }
-
+import Base from './base'
 class Message extends Base {
   /**
    * a general method to send message to the main process
@@ -19,7 +16,7 @@ class Message extends Base {
    * @param args arguments for the method
    */
   sendMsg (methodName: string, ...args: any[]) {
-    return this._send(this.ipc as IpcRenderer, DEFAULT_CHANNEL_NAME, methodName, ...args)
+    return this._send(this.ipc as IpcRenderer, Base.DEFAULT_CHANNEL_NAME, methodName, ...args)
   }
 }
 

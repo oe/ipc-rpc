@@ -5,19 +5,27 @@ type IPC = IpcMain | IpcRenderer
 /**
  * default channel name for messaging between main & render
  */
-export const DEFAULT_CHANNEL_NAME = '__wonderful_xiu__'
+const DEFAULT_CHANNEL_NAME = '__wonderful_xiu__'
 
 type ErrorHandler = (e: Error) => any
 
 export type IHandlerMap = Record<string, Function>
 export default class MessageHub {
+  /**
+   * default channel name for messaging between main & render
+   */
+  static readonly DEFAULT_CHANNEL_NAME = DEFAULT_CHANNEL_NAME
   private isMainProcess: boolean
   private msgID: number
   protected ipc: IPC
   private errorHandler?: ErrorHandler
-  constructor () {
+  constructor (isMain = false) {
     // detect whether in main process
+    // check method fork from https://github.com/delvedor/electron-is/blob/master/is.js
     this.isMainProcess = process.type === 'browser'
+    if (isMain !== this.isMainProcess) {
+      throw new Error(`[IPC-RPC]you should use ipc-rpc/${isMain ? 'main' : 'renderer'} in ${isMain ? 'main' : 'renderer'} process`)
+    }
     // save IPC object
     this.ipc = this.isMainProcess ? electron.ipcMain : electron.ipcRenderer
     // msg number
@@ -59,8 +67,9 @@ export default class MessageHub {
     // response message id
     const msgID = `${channel}-${reqData.id}`
     // progress message id
-    const msgProgressID = `${msgID}-progress`
+    let msgProgressID = ''
     if (onprogress) {
+      msgProgressID = `${msgID}-progress`
       // @ts-ignore
       this.ipc.on(msgProgressID, (evt, resp) => {
         onprogress(resp)
@@ -72,7 +81,7 @@ export default class MessageHub {
       // listen to the response
       this.ipc.once(msgID, (event, resp) => {
         // remove listener for the progress message
-        this.ipc.removeAllListeners(msgProgressID)
+        msgProgressID && this.ipc.removeAllListeners(msgProgressID)
         resp.isSuccess ? resolve(resp.data) : reject(resp.data)
       })
     })
@@ -87,10 +96,11 @@ export default class MessageHub {
     const realListener = async (evt: electron.IpcRendererEvent | electron.IpcMainEvent, { id, args, progress }: { id: string, args: any[], progress: boolean }) => {
       let resp: any
       const [methodName, ...restArgs] = args
-      if (id && progress && restArgs[0]) {
+      const msgID = `${channel}-${id}`
+      if (progress && restArgs[0]) {
         // reassign the onprogress
         restArgs[0].onprogress = function (data) {
-          evt.sender.send(`${channel}-${id}-progress`, data)
+          evt.sender.send(`${msgID}-progress`, data)
         }
       }
       // append raw event as the last argument
@@ -100,14 +110,16 @@ export default class MessageHub {
       try {
         const cb = handlerMap[methodName]
         // tslint:disable-next-line
-        if (typeof cb !== 'function') throw new Error(`[IPC-RPC] method ${methodName} not a function in channel ${channel}`)
+        if (typeof cb !== 'function') {
+          throw new Error(`[IPC-RPC] method "${methodName}" not a function in channel ${channel} of ${this.isMainProcess ? 'main' : 'renderer'} process`)
+        }
         resp = await cb.apply(null, restArgs)
       } catch (e) {
         // handle the error by errorHandler or just return the error
         resp = this.errorHandler ? this.errorHandler(e) : e
         isSuccess = false
       }
-      id && evt.sender.send(`${channel}-${id}`, { data: resp, isSuccess })
+      evt.sender.send(msgID, { data: resp, isSuccess })
     }
     // save the real message callback  for `off` using
     return realListener

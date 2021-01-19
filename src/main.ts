@@ -1,13 +1,12 @@
-import { WebContents } from 'electron'
+import { WebContents, BrowserWindow } from 'electron'
 import Base from './base'
-export { DEFAULT_CHANNEL_NAME } from './base'
 
 type getWindowWebContents = (winName: string) => WebContents
 
 class Message extends Base {
   private getWindowWebContents?: getWindowWebContents
   constructor (getWebContents?: getWindowWebContents) {
-    super()
+    super(true)
     this.getWindowWebContents = getWebContents
   }
 
@@ -19,11 +18,15 @@ class Message extends Base {
     this.getWindowWebContents = fn
   }
 
-  private getWinContents (winName: string | WebContents): WebContents {
-    if (winName instanceof WebContents) return winName
-    if (this.getWindowWebContents) {
+  private getWinContents (winName: string | WebContents | BrowserWindow): WebContents {
+    if (winName instanceof BrowserWindow) return winName.webContents
+    if (typeof winName === 'string' && this.getWindowWebContents) {
       return this.getWindowWebContents(winName)
     }
+    // WebContents not exported from electron lib(but in type definitions), so `winName instanceof WebContents` not working
+    //    workaround by checking its properties
+    // @ts-ignore
+    if (winName && winName.browserWindowOptions && winName.webContents) return winName
     throw new Error('[IPC-RPC]cannot find window ' + winName)
   }
   /**
@@ -32,10 +35,14 @@ class Message extends Base {
    * @param channel channel name
    * @param args
    */
-  send (winName: string | WebContents, channel: string, ...args: any[]) {
+  send (winName: string | WebContents | BrowserWindow, channel: string, ...args: any[]) {
     const win = this.getWinContents(winName)
     if (!win) return console.warn(`window ${winName} not exists`)
     return this._send(win, channel, ...args)
+  }
+
+  sendMsg (winName: string | WebContents | BrowserWindow, ...args: any[]) {
+    return this.send(winName, Base.DEFAULT_CHANNEL_NAME, ...args)
   }
 }
 

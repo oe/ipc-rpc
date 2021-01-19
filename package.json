@@ -1,16 +1,28 @@
 {
   "name": "ipc-rpc",
-  "version": "0.1.3",
+  "version": "0.1.8",
   "description": "ipc communication as rpc(remote procedure call) for  electron apps",
+  "exports": {
+    "./main": {
+      "types": "./dist/main.ts",
+      "import": "./dist/main.es.js",
+      "require": "./dist/main.cjs.js"
+    },
+    "./renderer": {
+      "types": "./dist/renderer.ts",
+      "import": "./dist/renderer.es.js",
+      "require": "./dist/renderer.cjs.js"
+    }
+  },
   "files": [
-    "dist"
+    "*.js",
+    "*.d.ts"
   ],
-  "typings": "dist/ipc-rpc.d.ts",
   "scripts": {
     "dev": "parcel test/web/index.html --out-dir test/cache",
     "prebuild": "npm run lint && rimraf dist/*",
     "build": "rollup -c rollup.config.ts",
-    "postbuild": "ts-node build/update-pkg-version.ts",
+    "postbuild": "ts-node build/update-pkg-version.ts && cp package.json dist",
     "postpublish": "./build/post-publish2npm.sh",
     "test": "jest --coverage",
     "test:server": "jest --coverage --watch",
@@ -36,6 +48,9 @@
     "url": "https://github.com/oe/ipc-rpc/issues"
   },
   "homepage": "https://github.com/oe/ipc-rpc#readme",
+  "peerDependencies": {
+    "electron": "*"
+  },
   "devDependencies": {
     "@babel/core": "^7.1.2",
     "@babel/plugin-transform-runtime": "^7.1.0",

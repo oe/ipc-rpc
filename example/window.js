@@ -1,31 +1,43 @@
-$(() => {
-  const crypto = require('crypto')
-  const ipc = require('./renderer')
+const ipc = require('../dist/main')
 
-  $('#text-input').bind('input propertychange', function() {
-    const text = this.value
+const $ = (id) => {
+  return document.getElementById(id.replace(/^\#/, ''))
+}
 
-    // const md5 = crypto.createHash('md5').update(text, 'utf8').digest('hex')
-    ipc.sendMsg('md5', text).then((md5) => {
-      $('#md5-output').text(md5)
-    })
-    
+// convert all error that on & onMsg handlers may throw
+ipc.setErrorHandler((err) => err.toString())
 
-    // const sha1 = crypto.createHash('sha1').update(text, 'utf8').digest('hex')
-    ipc.sendMsg('sha1', text).then((sha1) => {
-      $('#sha1-output').text(sha1)
-    })
+// listen message send to main process via default channel
+ipc.onMsg({
+  // register getTitle method
+  getTitle () {
+    // throw 
+    throw new Error(' can not get title')
+  }
+})
 
-    // const sha256 = crypto.createHash('sha256').update(text, 'utf8').digest('hex')
-    ipc.sendMsg('sha256', text).then((sha256) => {
-      $('#sha256-output').text(sha256)
-    })
+$('#text-input').addEventListener('input', function() {
+  const text = this.value
 
-    // const sha512 = crypto.createHash('sha512').update(text, 'utf8').digest('hex')
-    ipc.sendMsg('sha512', text).then((sha512) => {
-      $('#sha512-output').text(sha512)
-    })
+  ipc.sendMsg('md5', text).then((md5) => {
+    $('#md5-output').innerText = md5
+  })
+  
+  // catch error if this method could failed
+  ipc.sendMsg('sha1', text).then((sha1) => {
+    $('#sha1-output').innerText = sha1
+  }).catch(err =>{
+    $('#sha1-output').innerText = 'error occurred ' + err
   })
 
-  $('#text-input').focus() // focus input box
+})
+
+$('#progress-btn').addEventListener('click', () => {
+  ipc.sendMsg('download', {
+    onprogress(progress) {
+      $('#progress-output').innerText = progress
+    }
+  }).then((res) => {
+    $('#progress-output').innerText = res
+  })
 })
